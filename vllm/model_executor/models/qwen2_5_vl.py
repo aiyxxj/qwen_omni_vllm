@@ -250,7 +250,7 @@ class Qwen2_5_VisionAttention(nn.Module):
         # Detect attention implementation.
         self.attn_backend: _Backend = get_vit_attn_backend(support_fa=True)
         if self.attn_backend not in {
-                _Backend.FLASH_ATTN, _Backend.TORCH_SDPA, _Backend.XFORMERS
+                _Backend.FLASH_ATTN, _Backend.TORCH_SDPA, _Backend.XFORMERS, _Backend.TRITON_ATTN_VLLM_V1
         }:
             raise RuntimeError(
                 f"Qwen2.5-VL does not support {self.attn_backend} backend now."
@@ -301,7 +301,7 @@ class Qwen2_5_VisionAttention(nn.Module):
             q = apply_rotary_pos_emb_vision(q, rotary_pos_emb)
             k = apply_rotary_pos_emb_vision(k, rotary_pos_emb)
 
-        if self.attn_backend == _Backend.FLASH_ATTN:
+        if self.attn_backend == _Backend.FLASH_ATTN or self.attn_backend == _Backend.TRITON_ATTN_VLLM_V1:
             # from vllm_flash_attn.flash_attn_interface import (
             #   flash_attn_varlen_func)
             from flash_attn import flash_attn_varlen_func
