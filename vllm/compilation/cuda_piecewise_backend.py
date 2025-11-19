@@ -114,6 +114,7 @@ class CUDAPiecewiseBackend:
         runtime_shape = args[self.sym_shape_indices[0]]
         if runtime_shape not in self.concrete_size_entries:
             # we don't need to do anything for this shape
+            logger.warning("runtime_shape %s not in concrete_size_entries", runtime_shape)
             return self.compiled_graph_for_general_shape(*args)
 
         entry = self.concrete_size_entries[runtime_shape]
@@ -122,6 +123,7 @@ class CUDAPiecewiseBackend:
             entry.runnable = self.compiled_graph_for_general_shape
 
         if entry.need_to_compile and not entry.compiled:
+            logger.warning("runtime_shape %s need_to_compile", runtime_shape)
             entry.compiled = True
             self.to_be_compiled_sizes.remove(runtime_shape)
             # args are real arguments
@@ -142,10 +144,12 @@ class CUDAPiecewiseBackend:
         # if we're supposed to skip them globally
         skip_cuda_graphs = get_forward_context().skip_cuda_graphs
         if not entry.use_cudagraph or skip_cuda_graphs:
+            logger.warning("use_cudagraph %s skip_cuda_graphs %s", entry.use_cudagraph, skip_cuda_graphs)
             return entry.runnable(*args)
 
         if entry.cudagraph is None:
             if entry.num_finished_warmup < self.compilation_config.cudagraph_num_of_warmups:  # noqa
+                logger.warning("entry.cudagraph is None, num_finished_warmup: %s ", entry.num_finished_warmup)
                 entry.num_finished_warmup += 1
                 if self.is_first_graph:
                     logger.debug(
